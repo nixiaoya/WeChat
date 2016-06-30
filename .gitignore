@@ -1,0 +1,12 @@
+# directories
+lib/
+bin/
+share/
+include/
+uwsgi/
+website/wechat/migrations
+
+# files
+/pip-selfcheck.json
+*.pyc
+settings.py
