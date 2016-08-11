@@ -1,18 +1,27 @@
-#coding=utf-8
+#-*- coding=utf-8 -*-
+
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.template import loader
 from django.conf import settings
+from pymongo import MongoClient
 from xml.etree import ElementTree as ET
+
 import time
 import hashlib
 import json
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
 from wechat.functions import *
 from WXBizMsgCrypt import WXBizMsgCrypt
+
+## db ##
+mongo_db_client = MongoClient("mongodb://127.0.0.1:27017")
+mdb = mongo_db_client['wechat']
+
+#r = redis.Redis(host='127.0.0.1', port=6379)
+
+## collection ##
+command_list = 'commands'
 
 def token_required(func):
     def _token_required(request):
@@ -77,14 +86,18 @@ def handlerPost(request):
     respContent = 'bye bye'
     if msgType == 'text':
         reqContent = str_xml.findtext("Content")
-        respContent = reqContent[::-1]
+        command_filter = mdb[command_list].find_one({'name':reqContent})
+        if command_filter:
+            respContent = execCommand(command_filter['type'], command_filter['script_file'])
+        else:
+            respContent = reqContent[::-1]
 
     elif msgType == 'event':
         event = str_xml.findtext("Event")
         if event == "subscribe":
             respContent = u'欢迎关注: ' + settings.WECHAT_TITLE  + "\n" + \
-                        u'这里提供了 bla bla bla ' + "\n" + \
-                        u'bla bla bla '
+                        u'这里提供了' + "\n" + \
+                        u'biu biu biu '
 
     toUser = str_xml.findtext("FromUserName")
     fromUser = str_xml.findtext("ToUserName")
